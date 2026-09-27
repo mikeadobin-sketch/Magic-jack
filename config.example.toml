@@ -1,0 +1,51 @@
+# Copy to e.g. my-reservation.toml and edit. Run:
+#   python -m magicjack_checkin my-reservation.toml --dry-run    (preview, no call)
+#   python -m magicjack_checkin my-reservation.toml              (wait for window, then call)
+
+[call]
+number = "+18005551234"        # the reservation line to dial (E.164 format)
+backend = "twilio"             # twilio | sip | dry-run
+hangup_after = 3               # seconds to stay on after the last digit
+
+# When to call. Omit `start` to call immediately.
+[schedule]
+timezone = "America/New_York"
+start = "2026-10-03T15:00:00"  # earliest moment to place the call (check-in window opens)
+end = "2026-10-03T15:30:00"    # stop retrying after this
+retry_interval = 60            # seconds between attempts
+max_attempts = 5
+
+# What to key in once the call is answered, in order.
+# `wait` = seconds to wait (after answer / after the previous step) before keying in.
+# `digit_gap` = seconds between individual digits.
+[[steps]]
+wait = 6                       # let the greeting play
+digits = "1"                   # e.g. "press 1 to check in"
+
+[[steps]]
+wait = 4
+digits = "12345678#"           # e.g. confirmation number followed by #
+digit_gap = 0.5
+
+[[steps]]
+wait = 5
+digits = "1"                   # e.g. "press 1 to confirm"
+
+# --- Twilio backend -------------------------------------------------------
+# Keys ending in _env are read from that environment variable.
+[twilio]
+account_sid_env = "TWILIO_ACCOUNT_SID"
+auth_token_env = "TWILIO_AUTH_TOKEN"
+from_number = "+15555550100"   # your MagicJack number, verified as a Twilio caller ID
+record = false                 # true = Twilio records the call so you can confirm it worked
+ring_timeout = 30
+
+# --- SIP backend (needs: pip install pyVoIP) ------------------------------
+[sip]
+server = "sip.example.com"
+port = 5060
+username_env = "SIP_USERNAME"
+password_env = "SIP_PASSWORD"
+ring_timeout = 30
+# local_ip = "192.168.1.20"    # auto-detected if omitted
+# local_port = 5060
